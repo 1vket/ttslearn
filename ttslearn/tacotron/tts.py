@@ -100,21 +100,27 @@ Vocoder model: {wavenet_str}
         self.wavenet_model.to(device)
 
     @torch.no_grad()
-    def tts(self, text, griffin_lim=False, tqdm=tqdm):
+    def tts(self, text, griffin_lim=False, tqdm=tqdm, symbol=False):
         """Run TTS
 
         Args:
             text (str): Input text
             griffin_lim (bool, optional): Use Griffin-Lim algorithm or not. Defaults to False.
             tqdm (object, optional): tqdm object. Defaults to None.
+            symbol (bool, optional): if you don't want to convert to a phoneme sequence. Defaults to False
 
         Returns:
             tuple: audio array (np.int16) and sampling rate (int)
         """
-        # OpenJTalkを用いて言語特徴量の抽出
-        contexts = pyopenjtalk.extract_fullcontext(text)
-        # 韻律記号付き音素列に変換
-        in_feats = text_to_sequence(pp_symbols(contexts))
+
+        if not symbol:
+          # OpenJTalkを用いて言語特徴量の抽出
+          contexts = pyopenjtalk.extract_fullcontext(text)
+          # 韻律記号付き音素列に変換
+          in_feats = text_to_sequence(pp_symbols(contexts))
+        else:
+          in_feats = text
+
         in_feats = torch.tensor(in_feats, dtype=torch.long).to(self.device)
 
         # (T, C)
